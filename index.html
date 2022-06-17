@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Budedit</title>
+    <link rel="stylesheet" href="limonny.css">
+    <link rel="stylesheet" href="index.css">
+    <!--<link rel="stylesheet" href="core/src/themes/atom-dark.css">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body class="dark">
+    <div class="navbar">
+  <div class="dropdown">
+    <button class="dropbtn">File</button>
+    <div class="dropdown-content animated" style="--animate-speed:0.2s">
+      <a onclick="document.getElementById('inputfile').click()" class="animated" style="--animate-speed:0.1s">Open</a>
+      <a class="animated" style="--animate-speed:0.1s" id="downloadfile">Download</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Options</button>
+    <div class="dropdown-content animated" style="--animate-speed:0.2s">
+      <!--<a onclick="" class="animated" style="--animate-speed:0.1s">Import</a>-->
+      <a class="animated" style="--animate-speed:0.1s" id="openexteditor">Edit Extension</a>
+      <a class="animated" style="--animate-speed:0.1s" id="openthem">Change Theme</a>
+  </div>
+</div>
+</div>
+    <input type="file" name="inputfile" id="inputfile" class="limon rounded" style="display:none">
+    <input type="file" name="extselector" id="extselector" class="limon rounded" style="display:none" accept=".js">
+    <editor>
+      <textarea id="code"></textarea>
+      <pre id="cda" class="shj-multiline" style="margin:0;padding:0;border-radius:0;max-width:none;line-height:normal;"></pre>
+    </editor>
+  </body>
+  <script type="module">
+      import { highlightElement } from './core/src/index.js';
+      import { detectLanguage } from './core/src/detect.js';
+      const tx = document.getElementsByTagName("textarea");
+      var cda = document.getElementById("cda")
+      for (let i = 0; i < tx.length; i++) {
+        tx[i].setAttribute("style", "height:" + (window.innerHeight - 47) + "px;min-width:" + (window.innerWidth) + "px;overflow-x:hidden;");
+        tx[i].addEventListener("input", OnInput, false);
+      }
+
+      function OnInput() {
+        ch();
+      }
+      function asize() {
+        document.getElementsByTagName("editor")[0].style.height = (window.innerHeight - 47) + "px";
+        var ml = "0"
+        try {
+          ml = document.getElementsByClassName("shj-numbers")[0].offsetWidth + "px"
+        } catch (e) {
+
+        }
+        document.getElementById("code").style.left = ml
+      }
+      setInterval(asize,1)
+      setTimeout(function() {
+        cda.innerHTML = "";
+        ch();
+      },1000)
+      document.getElementById('inputfile').addEventListener('change', function() {
+          var fr=new FileReader();
+          fr.onload=function(){
+              document.getElementById("code").value = fr.result;
+              ch()
+          }
+
+          fr.readAsText(this.files[0]);
+      })
+      function ch() {
+        document.getElementById("code").style.minWidth = window.innerWidth
+        document.getElementById("code").style.minHeight = document.getElementsByTagName("editor")[0].height;
+        document.getElementById("code").style.height = "auto";
+        document.getElementById("code").style.width = "auto";
+        document.getElementById("code").style.width = (document.getElementById("code").scrollWidth) + "px";
+        document.getElementById("code").style.height = (document.getElementById("code").scrollHeight) + "px";
+        cda.innerHTML = "";
+        var item = document.getElementById("code").value//.split("\n")
+        //nl.forEach((item, i) => {
+          var cd = document.createElement("div")
+          cd.innerText = item + " ";
+          cda.appendChild(cd)
+          cd.textContent = item;
+          highlightElement(cd, detectLanguage(item));
+        //});
+      }
+      function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+      }
+      function dowfile() {
+        var nm = "code.*"
+        try {
+          nm = document.getElementById("inputfile").files[0].name
+        } catch (e) {
+
+        }
+        download(nm,document.getElementById('code').value)
+      }
+      document.getElementById("downloadfile").onclick = dowfile;
+      try {
+        if (localStorage.getItem("ext") === null) {
+          localStorage.setItem("ext","")
+        }
+        if (localStorage.getItem("theme") === null) {
+          localStorage.setItem("theme","github-dark")
+        }
+        var ln = document.createElement("link")
+        ln.rel = "stylesheet";
+        ln.href = "core/src/themes/" + localStorage.getItem("theme") + ".css"
+        document.body.appendChild(ln)
+        try {
+          eval(localStorage.getItem("ext"))
+        } catch (e) {
+          messag("There is a problem with extension code. Please edit it.","Error","close",false,"")
+        }
+      } catch (e) {
+        messag("Looks like your profile data file corrupted. Please delete cookies.","Error","Close",false,"")
+      }
+      function exteditor() {
+        messag("<textarea id='exta' style='width:100%;height:300px;'></textarea>","Edit Extension Codes","Apply",true,"Cancel",function(a) {
+          if (a === true) {
+            localStorage.setItem("ext",document.getElementById("exta").value)
+          }
+        })
+        document.getElementById("exta").value = localStorage.getItem("ext")
+      }
+      document.getElementById("openexteditor").onclick = exteditor
+      function themdiag() {
+        messag("<select id='selthm' class='limon dark pill'><option value='github-dark'>Github Dark</option><option value='github-dim'>Github Dim</option><option value='github-light'>Github Light</option></select>",
+        "Change Theme","Apply",true,"Cancel",function(a) {
+          if (a === true) {
+            localStorage.setItem("theme",document.getElementById("selthm").value)
+          }
+        })
+        document.getElementById("selthm").value = localStorage.getItem("theme")
+      }
+      document.getElementById("openthem").onclick = themdiag;
+  </script>
+  <script src="LimonJS.js"></script>
+</html>
